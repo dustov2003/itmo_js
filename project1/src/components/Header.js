@@ -17,7 +17,7 @@ export default class Header extends BaseComponent {
             background: '#007bff',
             color: 'white',
             borderRadius: '8px',
-            marginBottom: '20px'
+            marginBottom: '20px',
         });
 
         const nav = new BaseComponent('nav').mount(this.element);

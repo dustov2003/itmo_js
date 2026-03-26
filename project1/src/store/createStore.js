@@ -4,16 +4,18 @@ export function createStore(reducer, initialState) {
 
     return {
         getState: () => state,
-        dispatch: (action) => {
+        dispatch: action => {
             state = reducer(state, action);
             listeners.forEach(fn => fn());
         },
-        subscribe: (fn) => {
+        subscribe: fn => {
             listeners.push(fn);
             return () => {
                 const i = listeners.indexOf(fn);
-                if (i > -1) listeners.splice(i, 1);
+                if (i > -1) {
+                    listeners.splice(i, 1);
+                }
             };
-        }
+        },
     };
 }

@@ -27,12 +27,14 @@ export default class HomePage {
             .setStyle({ textAlign: 'center', color: '#333' })
             .mount(this.container.element);
 
-        const stats = new BaseComponent('p')
-            .setText(`Всего: ${state.tasks.length} | Выполнено: ${state.tasks.filter(t => t.completed).length}`)
+        new BaseComponent('p')
+            .setText(
+                `Всего: ${state.tasks.length} | Выполнено: ${state.tasks.filter(t => t.completed).length}`
+            )
             .setStyle({ textAlign: 'center', color: '#666', marginBottom: '20px' })
             .mount(this.container.element);
 
-        new TaskForm((text) => {
+        new TaskForm(text => {
             this.store.dispatch({ type: 'ADD_TASK', payload: text });
         }).mount(this.container.element);
 
@@ -49,15 +51,18 @@ export default class HomePage {
             state.tasks.forEach(task => {
                 new TaskItem(
                     task,
-                    (id) => this.store.dispatch({ type: 'REMOVE_TASK', payload: id }),
-                    (id) => this.store.dispatch({ type: 'TOGGLE_TASK', payload: id })
+                    id => this.store.dispatch({ type: 'REMOVE_TASK', payload: id }),
+                    id => this.store.dispatch({ type: 'TOGGLE_TASK', payload: id }),
+                    (id, text) => this.store.dispatch({ type: 'EDIT_TASK', payload: { id, text } })
                 ).mount(list.element);
             });
         }
     }
 
     unmount() {
-        if (this.unsubscribe) this.unsubscribe();
+        if (this.unsubscribe) {
+            this.unsubscribe();
+        }
         this.container.unmount();
     }
 }

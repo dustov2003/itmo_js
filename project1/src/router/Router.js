@@ -14,13 +14,13 @@ export class Router {
     render() {
         const path = window.location.hash.slice(1) || '/';
         const handler = this.routes[path] || this.routes['/'];
-        
+
         this.app.innerHTML = '';
-        
+
         if (this.currentComponent && this.currentComponent.unmount) {
             this.currentComponent.unmount();
         }
-        
+
         if (handler) {
             this.currentComponent = handler();
             if (this.currentComponent.mount) {

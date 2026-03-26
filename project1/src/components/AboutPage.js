@@ -26,27 +26,27 @@ export default class AboutPage {
                 maxWidth: '800px',
                 margin: '20px auto',
                 lineHeight: '1.8',
-                boxShadow: '0 4px 15px rgba(0,0,0,0.1)'
+                boxShadow: '0 4px 15px rgba(0,0,0,0.1)',
             })
             .mount(this.container.element);
 
         new BaseComponent('h1')
             .setText('📄 Документация проекта')
-            .setStyle({ 
-                textAlign: 'center', 
+            .setStyle({
+                textAlign: 'center',
                 color: '#333',
                 marginBottom: '30px',
                 borderBottom: '2px solid #667eea',
-                paddingBottom: '10px'
+                paddingBottom: '10px',
             })
             .mount(content.element);
 
         const htmlContent = this.parseMarkdown(readmeContent);
-        
+
         const readmeDiv = new BaseComponent('div')
             .setAttr('class', 'readme-content')
             .mount(content.element);
-        
+
         readmeDiv.element.innerHTML = htmlContent;
 
         this.injectReadmeStyles();
@@ -63,8 +63,8 @@ export default class AboutPage {
         backBtn.style.textDecoration = 'none';
         backBtn.style.borderRadius = '6px';
         backBtn.style.fontWeight = 'bold';
-        backBtn.onmouseover = () => backBtn.style.background = '#764ba2';
-        backBtn.onmouseout = () => backBtn.style.background = '#667eea';
+        backBtn.onmouseover = () => (backBtn.style.background = '#764ba2');
+        backBtn.onmouseout = () => (backBtn.style.background = '#667eea');
         content.element.appendChild(backBtn);
     }
 
@@ -75,10 +75,16 @@ export default class AboutPage {
             .replace(/^# (.*$)/gim, '<h1>$1</h1>')
             .replace(/\*\*(.*)\*\*/gim, '<b>$1</b>')
             .replace(/\*(.*)\*/gim, '<i>$1</i>')
-            .replace(/^\- (.*$)/gim, '<li>$1</li>')
+            .replace(/^- (.*$)/gim, '<li>$1</li>')
             .replace(/^\* (.*$)/gim, '<li>$1</li>')
-            .replace(/`(.*)`/gim, '<code style="background:#f4f4f4;padding:2px 6px;border-radius:3px;">$1</code>')
-            .replace(/\[(.*)\]\((.*)\)/gim, '<a href="$2" target="_blank" style="color:#667eea;">$1</a>')
+            .replace(
+                /`(.*)`/gim,
+                '<code style="background:#f4f4f4;padding:2px 6px;border-radius:3px;">$1</code>'
+            )
+            .replace(
+                /\[(.*)\]\((.*)\)/gim,
+                '<a href="$2" target="_blank" style="color:#667eea;">$1</a>'
+            )
             .replace(/\n\n/gim, '</p><p>')
             .replace(/^/, '<p>')
             .replace(/$/, '</p>');

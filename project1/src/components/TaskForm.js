@@ -11,13 +11,13 @@ export default class TaskForm extends BaseComponent {
     render() {
         this.element.innerHTML = '';
         this.setAttr('class', 'task-form');
-        this.setStyle({ 
-            display: 'flex', 
+        this.setStyle({
+            display: 'flex',
             marginBottom: '20px',
-            gap: '10px'
+            gap: '10px',
         });
 
-        this.element.onsubmit = (e) => e.preventDefault();
+        this.element.onsubmit = e => e.preventDefault();
 
         this.input = document.createElement('input');
         this.input.type = 'text';
@@ -25,16 +25,14 @@ export default class TaskForm extends BaseComponent {
         this.input.style.flex = '1';
         this.input.style.padding = '8px';
 
-        this.debouncedValidate = debounce((value) => {
-            console.log('Validating:', value);
-        }, 300);
+        this.debouncedValidate = debounce(_value => {}, 300);
 
-        this.input.oninput = (e) => this.debouncedValidate(e.target.value);
+        this.input.oninput = e => this.debouncedValidate(e.target.value);
 
         this.btn = document.createElement('button');
         this.btn.type = 'submit';
         this.btn.textContent = 'Добавить';
-        this.btn.onclick = (e) => {
+        this.btn.onclick = e => {
             e.preventDefault();
             if (this.input.value.trim()) {
                 this.onSubmit(this.input.value.trim());

@@ -1,0 +1,659 @@
+
+
+### FILE: src/components/AboutPage.js ###
+
+import { BaseComponent } from '../core/BaseComponent.js';
+import Header from './Header.js';
+import readmeContent from '../../README.md?raw';
+
+export default class AboutPage {
+    constructor() {
+        this.container = new BaseComponent('div');
+    }
+
+    mount(parent) {
+        parent.appendChild(this.container.element);
+        this.render();
+    }
+
+    render() {
+        this.container.element.innerHTML = '';
+
+        new Header().mount(this.container.element);
+
+        const content = new BaseComponent('div')
+            .setAttr('class', 'about-content')
+            .setStyle({
+                background: 'white',
+                padding: '30px',
+                borderRadius: '8px',
+                maxWidth: '800px',
+                margin: '20px auto',
+                lineHeight: '1.8',
+                boxShadow: '0 4px 15px rgba(0,0,0,0.1)'
+            })
+            .mount(this.container.element);
+
+        new BaseComponent('h1')
+            .setText('📄 Документация проекта')
+            .setStyle({ 
+                textAlign: 'center', 
+                color: '#333',
+                marginBottom: '30px',
+                borderBottom: '2px solid #667eea',
+                paddingBottom: '10px'
+            })
+            .mount(content.element);
+
+        const htmlContent = this.parseMarkdown(readmeContent);
+        
+        const readmeDiv = new BaseComponent('div')
+            .setAttr('class', 'readme-content')
+            .mount(content.element);
+        
+        readmeDiv.element.innerHTML = htmlContent;
+
+        this.injectReadmeStyles();
+
+        const backBtn = document.createElement('a');
+        backBtn.href = '#/';
+        backBtn.textContent = '← Вернуться к задачам';
+        backBtn.style.display = 'block';
+        backBtn.style.textAlign = 'center';
+        backBtn.style.marginTop = '30px';
+        backBtn.style.padding = '12px 24px';
+        backBtn.style.background = '#667eea';
+        backBtn.style.color = 'white';
+        backBtn.style.textDecoration = 'none';
+        backBtn.style.borderRadius = '6px';
+        backBtn.style.fontWeight = 'bold';
+        backBtn.onmouseover = () => backBtn.style.background = '#764ba2';
+        backBtn.onmouseout = () => backBtn.style.background = '#667eea';
+        content.element.appendChild(backBtn);
+    }
+
+    parseMarkdown(md) {
+        return md
+            .replace(/^### (.*$)/gim, '<h3>$1</h3>')
+            .replace(/^## (.*$)/gim, '<h2>$1</h2>')
+            .replace(/^# (.*$)/gim, '<h1>$1</h1>')
+            .replace(/\*\*(.*)\*\*/gim, '<b>$1</b>')
+            .replace(/\*(.*)\*/gim, '<i>$1</i>')
+            .replace(/^\- (.*$)/gim, '<li>$1</li>')
+            .replace(/^\* (.*$)/gim, '<li>$1</li>')
+            .replace(/`(.*)`/gim, '<code style="background:#f4f4f4;padding:2px 6px;border-radius:3px;">$1</code>')
+            .replace(/\[(.*)\]\((.*)\)/gim, '<a href="$2" target="_blank" style="color:#667eea;">$1</a>')
+            .replace(/\n\n/gim, '</p><p>')
+            .replace(/^/, '<p>')
+            .replace(/$/, '</p>');
+    }
+
+    injectReadmeStyles() {
+        const style = document.createElement('style');
+        style.textContent = `
+            .readme-content h1 { color: #2d3748; border-bottom: 2px solid #667eea; padding-bottom: 10px; }
+            .readme-content h2 { color: #4a5568; margin-top: 25px; }
+            .readme-content h3 { color: #718096; margin-top: 20px; }
+            .readme-content ul { padding-left: 20px; }
+            .readme-content li { margin: 8px 0; color: #4a5568; }
+            .readme-content p { margin: 15px 0; color: #4a5568; }
+            .readme-content code { font-family: 'Consolas', monospace; font-size: 14px; }
+            .readme-content a { text-decoration: none; }
+            .readme-content a:hover { text-decoration: underline; }
+        `;
+        document.head.appendChild(style);
+    }
+
+    unmount() {
+        this.container.unmount();
+    }
+}
+### END FILE ###
+
+
+
+### FILE: src/components/Header.js ###
+
+import { BaseComponent } from '../core/BaseComponent.js';
+
+export default class Header extends BaseComponent {
+    constructor() {
+        super('header');
+        this.render();
+    }
+
+    render() {
+        this.element.innerHTML = '';
+        this.setAttr('class', 'header');
+        this.setStyle({
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            padding: '15px 20px',
+            background: '#007bff',
+            color: 'white',
+            borderRadius: '8px',
+            marginBottom: '20px'
+        });
+
+        const nav = new BaseComponent('nav').mount(this.element);
+
+        const homeLink = document.createElement('a');
+        homeLink.href = '#/';
+        homeLink.textContent = 'Главная';
+        homeLink.style.color = 'white';
+        homeLink.style.marginRight = '15px';
+        homeLink.style.textDecoration = 'none';
+
+        const aboutLink = document.createElement('a');
+        aboutLink.href = '#/about';
+        aboutLink.textContent = 'О проекте';
+        aboutLink.style.color = 'white';
+        aboutLink.style.textDecoration = 'none';
+
+        nav.element.append(homeLink, aboutLink);
+    }
+}
+### END FILE ###
+
+
+
+### FILE: src/components/HomePage.js ###
+
+import { BaseComponent } from '../core/BaseComponent.js';
+import TaskForm from './TaskForm.js';
+import TaskItem from './TaskItem.js';
+import Header from './Header.js';
+
+export default class HomePage {
+    constructor(store) {
+        this.store = store;
+        this.container = new BaseComponent('div');
+        this.unsubscribe = null;
+    }
+
+    mount(parent) {
+        parent.appendChild(this.container.element);
+        this.render();
+        this.unsubscribe = this.store.subscribe(() => this.render());
+    }
+
+    render() {
+        this.container.element.innerHTML = '';
+        const state = this.store.getState();
+
+        new Header().mount(this.container.element);
+
+        new BaseComponent('h1')
+            .setText('📋 Мои задачи')
+            .setStyle({ textAlign: 'center', color: '#333' })
+            .mount(this.container.element);
+
+        const stats = new BaseComponent('p')
+            .setText(`Всего: ${state.tasks.length} | Выполнено: ${state.tasks.filter(t => t.completed).length}`)
+            .setStyle({ textAlign: 'center', color: '#666', marginBottom: '20px' })
+            .mount(this.container.element);
+
+        new TaskForm((text) => {
+            this.store.dispatch({ type: 'ADD_TASK', payload: text });
+        }).mount(this.container.element);
+
+        const list = new BaseComponent('div')
+            .setAttr('class', 'task-list')
+            .mount(this.container.element);
+
+        if (state.tasks.length === 0) {
+            new BaseComponent('p')
+                .setText('Нет задач. Добавьте первую!')
+                .setStyle({ textAlign: 'center', color: '#999' })
+                .mount(list.element);
+        } else {
+            state.tasks.forEach(task => {
+                new TaskItem(
+                    task,
+                    (id) => this.store.dispatch({ type: 'REMOVE_TASK', payload: id }),
+                    (id) => this.store.dispatch({ type: 'TOGGLE_TASK', payload: id })
+                ).mount(list.element);
+            });
+        }
+    }
+
+    unmount() {
+        if (this.unsubscribe) this.unsubscribe();
+        this.container.unmount();
+    }
+}
+### END FILE ###
+
+
+
+### FILE: src/components/TaskForm.js ###
+
+import { BaseComponent } from '../core/BaseComponent.js';
+import { debounce } from '../utils/helpers.js';
+
+export default class TaskForm extends BaseComponent {
+    constructor(onSubmit) {
+        super('form');
+        this.onSubmit = onSubmit;
+        this.render();
+    }
+
+    render() {
+        this.element.innerHTML = '';
+        this.setAttr('class', 'task-form');
+        this.setStyle({ 
+            display: 'flex', 
+            marginBottom: '20px',
+            gap: '10px'
+        });
+
+        this.element.onsubmit = (e) => e.preventDefault();
+
+        this.input = document.createElement('input');
+        this.input.type = 'text';
+        this.input.placeholder = 'Новая задача';
+        this.input.style.flex = '1';
+        this.input.style.padding = '8px';
+
+        this.debouncedValidate = debounce((value) => {
+            console.log('Validating:', value);
+        }, 300);
+
+        this.input.oninput = (e) => this.debouncedValidate(e.target.value);
+
+        this.btn = document.createElement('button');
+        this.btn.type = 'submit';
+        this.btn.textContent = 'Добавить';
+        this.btn.onclick = (e) => {
+            e.preventDefault();
+            if (this.input.value.trim()) {
+                this.onSubmit(this.input.value.trim());
+                this.input.value = '';
+            }
+        };
+
+        this.element.append(this.input, this.btn);
+    }
+}
+### END FILE ###
+
+
+
+### FILE: src/components/TaskItem.js ###
+
+import { BaseComponent } from '../core/BaseComponent.js';
+
+export default class TaskItem extends BaseComponent {
+    constructor(task, onRemove, onToggle) {
+        super('div');
+        this.task = task;
+        this.onRemove = onRemove;
+        this.onToggle = onToggle;
+        this.render();
+    }
+
+    render() {
+        this.element.innerHTML = '';
+        this.setAttr('class', 'task-item');
+        
+        const leftDiv = new BaseComponent('div')
+            .setStyle({ display: 'flex', alignItems: 'center', gap: '10px' })
+            .mount(this.element);
+
+        const checkbox = document.createElement('input');
+        checkbox.type = 'checkbox';
+        checkbox.checked = this.task.completed;
+        checkbox.onchange = () => this.onToggle(this.task.id);
+
+        const text = new BaseComponent('span')
+            .setText(this.task.text)
+            .setStyle({ 
+                textDecoration: this.task.completed ? 'line-through' : 'none',
+                color: this.task.completed ? '#888' : '#000'
+            })
+            .mount(leftDiv.element);
+
+        leftDiv.element.prepend(checkbox);
+
+        const delBtn = document.createElement('button');
+        delBtn.textContent = '🗑';
+        delBtn.className = 'delete';
+        delBtn.onclick = () => this.onRemove(this.task.id);
+        this.element.appendChild(delBtn);
+    }
+}
+### END FILE ###
+
+
+
+### FILE: src/core/BaseComponent.js ###
+
+export class BaseComponent {
+    constructor(tagName = 'div') {
+        this.element = document.createElement(tagName);
+    }
+    setAttr(key, value) { this.element.setAttribute(key, value); return this; }
+    setStyle(styles) { Object.assign(this.element.style, styles); return this; }
+    setText(text) { this.element.textContent = text; return this; }
+    mount(parent) { parent.appendChild(this.element); return this; }
+    unmount() { this.element.remove(); return this; }
+}
+### END FILE ###
+
+
+
+### FILE: src/main.js ###
+
+import { createStore } from './store/createStore.js';
+import { taskReducer } from './store/reducers.js';
+import { Router } from './router/Router.js';
+import { injectGlobalStyles, globalStyles } from './utils/styles.js';
+import HomePage from './components/HomePage.js';
+import AboutPage from './components/AboutPage.js';
+
+injectGlobalStyles(globalStyles);
+
+const saved = localStorage.getItem('appState');
+const initial = saved ? JSON.parse(saved) : { tasks: [] };
+const store = createStore(taskReducer, initial);
+
+store.subscribe(() => {
+    localStorage.setItem('appState', JSON.stringify(store.getState()));
+});
+
+const app = document.getElementById('app');
+const router = new Router({
+    '/': () => new HomePage(store),
+    '/about': () => new AboutPage()
+});
+
+router.init(app);
+
+console.log('App started');
+console.log('State:', store.getState());
+### END FILE ###
+
+
+
+### FILE: src/router/Router.js ###
+
+export class Router {
+    constructor(routes) {
+        this.routes = routes;
+        this.app = null;
+        this.currentComponent = null;
+    }
+
+    init(appElement) {
+        this.app = appElement;
+        window.addEventListener('hashchange', () => this.render());
+        this.render();
+    }
+
+    render() {
+        const path = window.location.hash.slice(1) || '/';
+        const handler = this.routes[path] || this.routes['/'];
+        
+        this.app.innerHTML = '';
+        
+        if (this.currentComponent && this.currentComponent.unmount) {
+            this.currentComponent.unmount();
+        }
+        
+        if (handler) {
+            this.currentComponent = handler();
+            if (this.currentComponent.mount) {
+                this.currentComponent.mount(this.app);
+            }
+        }
+    }
+}
+### END FILE ###
+
+
+
+### FILE: src/store/createStore.js ###
+
+export function createStore(reducer, initialState) {
+    let state = initialState;
+    const listeners = [];
+
+    return {
+        getState: () => state,
+        dispatch: (action) => {
+            state = reducer(state, action);
+            listeners.forEach(fn => fn());
+        },
+        subscribe: (fn) => {
+            listeners.push(fn);
+            return () => {
+                const i = listeners.indexOf(fn);
+                if (i > -1) listeners.splice(i, 1);
+            };
+        }
+    };
+}
+### END FILE ###
+
+
+
+### FILE: src/store/reducers.js ###
+
+export function taskReducer(state, action) {
+    switch (action.type) {
+        case 'ADD_TASK':
+            return { 
+                ...state, 
+                tasks: [...state.tasks, { id: Date.now(), text: action.payload, completed: false }] 
+            };
+        case 'REMOVE_TASK':
+            return { 
+                ...state, 
+                tasks: state.tasks.filter(t => t.id !== action.payload) 
+            };
+        case 'TOGGLE_TASK':
+            return {
+                ...state,
+                tasks: state.tasks.map(t => t.id === action.payload ? {...t, completed: !t.completed} : t)
+            };
+        default:
+            return state;
+    }
+}
+### END FILE ###
+
+
+
+### FILE: src/tests/store.test.js ###
+
+import { describe, it, expect } from 'vitest';
+import { createStore } from '../store/createStore.js';
+import { taskReducer } from '../store/reducers.js';
+import { clone, deepEqual, debounce } from '../utils/helpers.js';
+
+describe('MiniRedux Store', () => {
+    it('должен создавать стор с начальным состоянием', () => {
+        const store = createStore(taskReducer, { tasks: [] });
+        expect(store.getState().tasks).toEqual([]);
+    });
+
+    it('должен добавлять задачу через dispatch', () => {
+        const store = createStore(taskReducer, { tasks: [] });
+        store.dispatch({ type: 'ADD_TASK', payload: 'Test' });
+        expect(store.getState().tasks.length).toBe(1);
+        expect(store.getState().tasks[0].text).toBe('Test');
+    });
+
+    it('должен удалять задачу', () => {
+        const store = createStore(taskReducer, { tasks: [] });
+        store.dispatch({ type: 'ADD_TASK', payload: 'Test' });
+        const id = store.getState().tasks[0].id;
+        store.dispatch({ type: 'REMOVE_TASK', payload: id });
+        expect(store.getState().tasks.length).toBe(0);
+    });
+
+    it('должен переключать статус задачи', () => {
+        const store = createStore(taskReducer, { tasks: [] });
+        store.dispatch({ type: 'ADD_TASK', payload: 'Test' });
+        const id = store.getState().tasks[0].id;
+        store.dispatch({ type: 'TOGGLE_TASK', payload: id });
+        expect(store.getState().tasks[0].completed).toBe(true);
+    });
+
+    it('должен уведомлять подписчиков', () => {
+        const store = createStore(taskReducer, { tasks: [] });
+        let called = false;
+        store.subscribe(() => { called = true; });
+        store.dispatch({ type: 'ADD_TASK', payload: 'Test' });
+        expect(called).toBe(true);
+    });
+});
+
+describe('Utils', () => {
+    it('clone должен создавать глубокую копию', () => {
+        const obj = { a: 1, b: { c: 2 } };
+        const copy = clone(obj);
+        expect(copy).toEqual(obj);
+        expect(copy).not.toBe(obj);
+        expect(copy.b).not.toBe(obj.b);
+    });
+
+    it('deepEqual должен сравнивать объекты', () => {
+        expect(deepEqual({ a: 1 }, { a: 1 })).toBe(true);
+        expect(deepEqual({ a: 1 }, { a: 2 })).toBe(false);
+    });
+
+    it('debounce должен задерживать вызов', () => {
+        return new Promise((resolve) => {
+            let called = 0;
+            const fn = debounce(() => called++, 50);
+            fn();
+            fn();
+            fn();
+            expect(called).toBe(0);
+            setTimeout(() => {
+                expect(called).toBe(1);
+                resolve();
+            }, 100);
+        });
+    });
+});
+### END FILE ###
+
+
+
+### FILE: src/utils/helpers.js ###
+
+export function clone(obj) {
+    return JSON.parse(JSON.stringify(obj));
+}
+
+export function deepEqual(a, b) {
+    return JSON.stringify(a) === JSON.stringify(b);
+}
+
+export function debounce(func, delay) {
+    let timeoutId;
+    return function (...args) {
+        clearTimeout(timeoutId);
+        timeoutId = setTimeout(() => func.apply(this, args), delay);
+    };
+}
+
+export function generateId() {
+    return Date.now().toString(36) + Math.random().toString(36).substr(2);
+}
+### END FILE ###
+
+
+
+### FILE: src/utils/storage.js ###
+
+export const storage = {
+  get(key, fallback) {
+    try {
+      const item = localStorage.getItem(key);
+      return item ? JSON.parse(item) : fallback;
+    } catch (e) {
+      return fallback;
+    }
+  },
+  set(key, value) {
+    localStorage.setItem(key, JSON.stringify(value));
+  }
+};
+### END FILE ###
+
+
+
+### FILE: src/utils/styles.js ###
+
+export function injectGlobalStyles(cssString) {
+    const style = document.createElement('style');
+    style.textContent = cssString;
+    document.head.appendChild(style);
+}
+
+export const globalStyles = `
+    * { box-sizing: border-box; }
+    body { 
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+        margin: 0; 
+        padding: 20px; 
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        min-height: 100vh;
+    }
+    #app { max-width: 700px; margin: 0 auto; }
+    .task-item { 
+        display: flex; 
+        justify-content: space-between; 
+        align-items: center;
+        padding: 15px; 
+        margin-bottom: 10px;
+        background: white; 
+        border-radius: 8px; 
+        box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        transition: transform 0.2s;
+    }
+    .task-item:hover { transform: translateY(-2px); }
+    button { 
+        cursor: pointer; 
+        padding: 8px 16px; 
+        border: none; 
+        border-radius: 6px; 
+        font-weight: 500;
+        transition: background 0.2s;
+    }
+    button:hover { opacity: 0.9; }
+    button.delete { background: #ff4757; color: white; }
+    input[type="text"] { 
+        padding: 10px; 
+        border: 2px solid #ddd; 
+        border-radius: 6px; 
+        font-size: 14px;
+    }
+    input[type="text"]:focus { 
+        outline: none; 
+        border-color: #667eea; 
+    }
+    input[type="checkbox"] { 
+        width: 18px; 
+        height: 18px; 
+        cursor: pointer;
+    }
+    .task-form { 
+        background: white; 
+        padding: 20px; 
+        border-radius: 8px; 
+        margin-bottom: 20px;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    }
+    .task-list { min-height: 100px; }
+    @media (max-width: 600px) {
+        body { padding: 10px; }
+        .task-item { flex-direction: column; gap: 10px; }
+    }
+`;
+### END FILE ###
+

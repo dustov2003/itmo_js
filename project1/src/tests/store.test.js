@@ -39,6 +39,16 @@ describe('MiniRedux Store', () => {
         store.dispatch({ type: 'ADD_TASK', payload: 'Test' });
         expect(called).toBe(true);
     });
+
+    it('должен редактировать текст задачи', () => {
+    const store = createStore(taskReducer, { tasks: [] });
+    store.dispatch({ type: 'ADD_TASK', payload: 'Old Task' });
+    const id = store.getState().tasks[0].id;
+    
+    store.dispatch({ type: 'EDIT_TASK', payload: { id, text: 'New Task' } });
+    
+    expect(store.getState().tasks[0].text).toBe('New Task');
+    });
 });
 
 describe('Utils', () => {
